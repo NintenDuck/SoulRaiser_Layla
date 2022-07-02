@@ -1,6 +1,3 @@
-#TODO: Evitar que de un salto cada vez que sale de un slope
-# motion.y se queda con velocidad despues de estar en el slope
-
 extends KinematicBody2D
 
 
@@ -19,12 +16,22 @@ export var cut_height: float 		= 0
 const UP: Vector2					= Vector2.UP
 const MAX_SLOPE_ANGLE:int = 46
 
+enum states {
+	IDLE,
+	WALKING,
+	ATTACKING,
+	JUMPING,
+	DAMAGED,
+	CUTSCENE
+}
+
 export var GRAVITY: int 			= 0
 export var fallspd_max				= 0
 
 var motion: Vector2					= Vector2.ZERO
 var snap_vector: Vector2 = Vector2.ZERO
 var on_slope: bool = false
+var currentState = states.IDLE
 
 func _ready():
 	pass
@@ -33,14 +40,44 @@ func _ready():
 func _physics_process(delta):
 	var input_vector = check_input_vector()
 
-	apply_gravity()
-	apply_horizontal_force(input_vector)
-	check_if_on_slope()
-	update_snap_vector()
-	check_jump()
-	check_attack()
-	movement(input_vector)
-	update_animations(input_vector)
+	match currentState:
+		states.IDLE:
+			apply_gravity()
+			apply_horizontal_force(input_vector)
+			check_if_on_slope()
+			update_snap_vector()
+			check_jump()
+			check_attack()
+			movement(input_vector)
+			update_animations(input_vector)
+			pass
+		states.WALKING:
+			apply_gravity()
+			apply_horizontal_force(input_vector)
+			check_if_on_slope()
+			update_snap_vector()
+			check_jump()
+			check_attack()
+			movement(input_vector)
+			update_animations(input_vector)
+			pass
+		states.ATTACKING:
+
+			pass
+		states.JUMPING:
+			apply_gravity()
+			apply_horizontal_force(input_vector)
+			check_attack()
+			movement(input_vector)
+			update_animations(input_vector)
+			pass
+		states.DAMAGED:
+			apply_gravity()
+			movement(input_vector)
+			pass
+		states.CUTSCENE:
+
+			pass
 
 
 func check_input_vector():
@@ -54,13 +91,13 @@ func check_attack() -> void:
 		return		
 
 
-func apply_horizontal_force(input_vector):
+func apply_horizontal_force(input_vector) -> void:
 	if input_vector != 0:
 		motion.x += input_vector * acceleration
 		motion.x = clamp(motion.x, -vel_max, vel_max)
 
 
-func apply_gravity():
+func apply_gravity() -> void:
 	if not is_on_floor():
 		motion.y += GRAVITY
 		motion.y = min(motion.y, fallspd_max)
@@ -78,7 +115,6 @@ func movement(input_vector) -> void:
 		else:
 			friction = floor_friction
 
-#		motion.x = 0
 		motion.x = lerp( motion.x, 0, friction )
 	
 	motion = move_and_slide_with_snap(motion, snap_vector*4, UP, true, 4, deg2rad(MAX_SLOPE_ANGLE))
@@ -87,7 +123,7 @@ func movement(input_vector) -> void:
 	if is_on_floor() and get_floor_velocity().length() == 0 and abs(motion.x) < 1:
 		position.x = last_position.x
 
-func _input(event):
+func _input(event) -> void:
 	if event.is_action_released("k_jump_action"):
 		if motion.y < 0:
 			motion.y *= cut_height
