@@ -32,6 +32,7 @@ var motion: Vector2					= Vector2.ZERO
 var snap_vector: Vector2 = Vector2.ZERO
 var on_slope: bool = false
 var jumped: bool = false
+
 var currentState = states.IDLE
 
 func _ready():
@@ -51,8 +52,6 @@ func _physics_process(delta):
 			check_attack()
 			movement(input_vector)
 			update_animations(input_vector)
-			squish()
-			pass
 		states.WALKING:
 			apply_gravity()
 			apply_horizontal_force(input_vector)
@@ -62,9 +61,7 @@ func _physics_process(delta):
 			check_attack()
 			movement(input_vector)
 			update_animations(input_vector)
-			pass
 		states.ATTACKING:
-
 			pass
 		states.JUMPING:
 			apply_gravity()
@@ -72,13 +69,10 @@ func _physics_process(delta):
 			check_attack()
 			movement(input_vector)
 			update_animations(input_vector)
-			pass
 		states.DAMAGED:
 			apply_gravity()
 			movement(input_vector)
-			pass
 		states.CUTSCENE:
-
 			pass
 
 
@@ -155,18 +149,7 @@ func update_snap_vector() -> void:
 		snap_vector = Vector2.DOWN
 
 
-func squish():
-	# Si en suelo, y acaba de saltar -> aplastar horizontalmente
-	# Si en suelo y termino de saltar -> tamaño original
-	# Si acaesta en el aire -> agrandar verticalmente
-	# if is_on_floor():
-	# 	if jumped:
-	# 		sprite.scale = Vector2(1.25, 0.75)
-	# 		sprite.scale = lerp(sprite.scale, Vector2(1.25, 0.75), 0.1)
-	# 		jumped = false
-	# 	else:
-	# 		sprite.scale = lerp(sprite.scale, Vector2(1,1), 0.1)
-
+func squishSprite():
 	if is_on_floor():
 		sprite.scale = lerp(sprite.scale, Vector2(1,1),0.25)
 		if jumped:
@@ -174,11 +157,17 @@ func squish():
 			jumped = false
 	else:
 		if jumped:
-			sprite.scale = lerp(sprite.scale, Vector2(0.75, 1.15), 0.25)
+			sprite.scale = lerp(sprite.scale, Vector2(0.90, 1.05), 0.25)
+		else:
+			sprite.scale = lerp(sprite.scale, Vector2(1,1),0.25)
 	
+
 func update_animations(input_vector) -> void:
 	if input_vector != 0:
-		sprite.scale.x = input_vector
+		if input_vector == 1:
+			sprite.flip_h = false
+		else:
+			sprite.flip_h = true
 		if is_on_floor():
 			animation.play("walk")
 	else:
@@ -189,7 +178,8 @@ func update_animations(input_vector) -> void:
 			animation.play("fall")
 		else:
 			animation.play("jump")
-
+	
+	squishSprite()
 
 func _on_Hurtbox_hit(damage_amount):
 	print("Damage received:", damage_amount)
