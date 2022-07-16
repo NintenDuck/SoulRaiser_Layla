@@ -31,6 +31,7 @@ export var fallspd_max				= 0
 var motion: Vector2					= Vector2.ZERO
 var snap_vector: Vector2 = Vector2.ZERO
 var on_slope: bool = false
+var jumped: bool = false
 var currentState = states.IDLE
 
 func _ready():
@@ -50,6 +51,7 @@ func _physics_process(delta):
 			check_attack()
 			movement(input_vector)
 			update_animations(input_vector)
+			squish()
 			pass
 		states.WALKING:
 			apply_gravity()
@@ -135,8 +137,8 @@ func check_jump() -> void:
 			motion.y = 0
 			jump(jumpforce)
 
-
 func jump(force:float) -> void:
+	jumped = true
 	motion.y -= force
 	snap_vector = Vector2.ZERO
 
@@ -153,6 +155,27 @@ func update_snap_vector() -> void:
 		snap_vector = Vector2.DOWN
 
 
+func squish():
+	# Si en suelo, y acaba de saltar -> aplastar horizontalmente
+	# Si en suelo y termino de saltar -> tamaño original
+	# Si acaesta en el aire -> agrandar verticalmente
+	# if is_on_floor():
+	# 	if jumped:
+	# 		sprite.scale = Vector2(1.25, 0.75)
+	# 		sprite.scale = lerp(sprite.scale, Vector2(1.25, 0.75), 0.1)
+	# 		jumped = false
+	# 	else:
+	# 		sprite.scale = lerp(sprite.scale, Vector2(1,1), 0.1)
+
+	if is_on_floor():
+		sprite.scale = lerp(sprite.scale, Vector2(1,1),0.25)
+		if jumped:
+			sprite.scale = Vector2(1.35,0.65)
+			jumped = false
+	else:
+		if jumped:
+			sprite.scale = lerp(sprite.scale, Vector2(0.75, 1.15), 0.25)
+	
 func update_animations(input_vector) -> void:
 	if input_vector != 0:
 		sprite.scale.x = input_vector
